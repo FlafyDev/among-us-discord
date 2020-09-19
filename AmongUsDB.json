@@ -1,0 +1,19 @@
+{
+  "settings": {
+    "tshark_location": "tshark",
+    "interface": "Wi-Fi",
+    "server_port": "22023", // Should be this port
+    "client_port": "", // Leave blank for any port
+    "delay_between_mutes": 0.3
+  },
+
+  "discord": {
+    "token": "DISCORD BOT TOKEN",
+    "channel_voice_id": "755223136323070823"
+  },
+
+  "preferences": {
+    "meeting_end_mute_delay": 8,
+    "game_start_mute_delay": 5
+  }
+}
