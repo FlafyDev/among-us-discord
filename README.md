@@ -3,7 +3,7 @@ This Discord Bot mutes everyone in a voice chat between rounds. It gets data fro
 
 ### The bot's permissions
 You can give it the "Administrator" permission, or:
-* Give it the "Manage Channels" and "Mute Members" permissions
+* Give it the "Manage Channels", "Manage Roles" and "Mute Members" permissions
 * In the settings of the voice chat you want the bot to mute people, give it the "Connect" permission like so: [Example image](examples/voice_chat_connect_permission_example.png)
 
 ### The "AmongUsDB.json" file (required)
