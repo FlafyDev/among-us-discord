@@ -12,4 +12,4 @@ You can give it the "Administrator" permission, or:
 
 ### The "AmongUsDB.json" file
 A json file that contains settings about the bot.
-Should look like that: [AmongUsDB.json]()
+Should look like that: [AmongUsDB.json](AmongUsDB.json)
