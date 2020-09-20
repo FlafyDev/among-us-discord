@@ -1,11 +1,10 @@
-import re
-import subprocess
+from time import time, sleep
+import commentjson
+import threading
 import asyncio
 import discord
-from time import time
-import commentjson
-
-client = discord.Client()
+import pyshark
+import re
 
 try:
     json_file = open("AmongUsDB.json")
@@ -14,23 +13,56 @@ except FileNotFoundError:
 
 file_data = commentjson.load(json_file)
 json_file.close()
-
 print("Settings from file:", file_data)
 
-def execute(cmd):
-    popen = subprocess.Popen(cmd, stdout=subprocess.PIPE, universal_newlines=True)
-    for stdout_line in iter(popen.stdout.readline, ""):
-        yield stdout_line
-    popen.stdout.close()
-    return_code = popen.wait()
-    if return_code:
-        raise subprocess.CalledProcessError(return_code, cmd)
+discord_ready = False
+discord_mute_voice_chat = None
+discord_voice_channel = None
+discord_mute_member = None
+discord_loop = None
 
-async def controller():
-    await client.wait_until_ready()
-    detection_cooldown = 0
+def runDiscord():
+    global discord_loop
+    discord_loop = asyncio.new_event_loop()
+    asyncio.set_event_loop(discord_loop)
+    client = discord.Client()
 
-    channel_voice_id = int(file_data["discord"]["channel_voice_id"])
+    async def mute_voice_chat(voice_chat, mute_action):
+        try:
+            await voice_chat.set_permissions(discord_voice_channel.guild.default_role, connect=bool(mute_action))
+        except Exception as e:
+            print("Doesn't have permissions to change if users can connect to the voice channel. (or an error)", e)
+        pass
+
+    async def mute_member(member, mute_action):
+        try:
+            await member.edit(mute=(not bool(mute_action)))
+        except Exception as e:
+            print("Doesn't have permissions to mute/unmute users. (or an error)", e)
+
+    @client.event
+    async def on_ready():
+        global discord_ready, discord_mute_voice_chat, discord_voice_channel, discord_mute_member
+
+        discord_mute_voice_chat = mute_voice_chat
+        discord_mute_member = mute_member
+        channel_voice_id = int(file_data["discord"]["channel_voice_id"])
+        discord_voice_channel = client.get_channel(channel_voice_id)
+
+        print("Bot is ready")
+        discord_ready = True
+
+    client.run(file_data["discord"]["token"])
+
+discord_thread = threading.Thread(target=runDiscord)
+discord_thread.daemon = False
+discord_thread.start()
+
+def main():
+    print("in main")
+    while not discord_ready:
+        sleep(0.5)
+
     meeting_end_mute_delay = int(file_data["preferences"]["meeting_end_mute_delay"])
     game_start_mute_delay = int(file_data["preferences"]["game_start_mute_delay"])
 
@@ -42,85 +74,64 @@ async def controller():
         client_port = int(client_port)
     delay_between_mutes = float(file_data["settings"]["delay_between_mutes"])
 
-    voice_channel = client.get_channel(channel_voice_id)
-
+    detection_cooldown = 0
     mute_action = 1 # 0 - mute | 1 - unmute
     mute_time = 1
 
-    log_format = '-e "data.data" -e "udp.srcport" -e "udp.dstport" -e "udp.time_relative"'
-    command = f'{tshark_location} -i {interface} -T fields {log_format} -Y "udp"'
-    print("command:", command)
+    def mute_action_function():
+        nonlocal mute_action, mute_time
+        if mute_time != 0 and mute_time <= time():
+            mute_time = 0
+            for member in discord_voice_channel.members:
+                asyncio.run_coroutine_threadsafe(discord_mute_member(member, mute_action), discord_loop).result()
+                sleep(delay_between_mutes)
 
-    for line in execute(command):
-        if "0" in line:
-            args = line[:-1].split('\t')
+            asyncio.run_coroutine_threadsafe(discord_mute_voice_chat(discord_voice_channel, mute_action), discord_loop).result()
 
-            hexdata = args[0]
-            rawdata = bytes.fromhex(hexdata)
-            srcport = args[1]
-            dstport = args[2]
-            # time_ = args[3]
+            print("mute action:", mute_action, bool(mute_action))
 
-            if (int(srcport) == server_port or int(dstport) == server_port) and \
-                (client_port == "" or (int(srcport) == client_port or int(dstport) == client_port)):
-                if len(rawdata)>4 and (time()-detection_cooldown > 5):
-                    if ("EndGame".encode() in rawdata and rawdata[3:6] == bytes.fromhex("120005")) or (rawdata[3:6] == bytes.fromhex("060008")):
-                        print("Game ended")
+    mute_action_function()
 
-                        mute_time = time()
-                        mute_action = 1
-                        detection_cooldown = time()
+    capture = pyshark.LiveCapture(interface=interface, tshark_path=tshark_location,
+                                  display_filter=f"udp.port == 22023 and data.len > 4 { '' if client_port == '' else 'and udp.port == '+str(client_port) }")
 
-                    elif len(rawdata) >= 200:
-                        if "460000000001010101010101010101010101000000000" in hexdata:
-                            print("Game started")
+    for packet in capture.sniff_continuously():
+        hexdata = str(packet.data.data)
+        rawdata = bytes.fromhex(packet.data.data)
 
-                            mute_time = time()+game_start_mute_delay
-                            mute_action = 0
-                            detection_cooldown = time()
+        if time()-detection_cooldown >= 2:
+            if ("EndGame".encode() in rawdata and rawdata[3:6] == bytes.fromhex("120005")) or (rawdata[3:6] == bytes.fromhex("060008")):
+                print("Game ended")
 
-                    elif 16 >= len(rawdata) >= 15:
-                        regex = re.search("^(01).{6}(0005).{6}(80)(02|03)(0002).{2}(16|0116)", hexdata)
-                        if regex is not None:
-                            print("Meeting ended")
+                mute_time = time()
+                mute_action = 1
+                detection_cooldown = time()
 
-                            mute_time = time()+meeting_end_mute_delay
-                            mute_action = 0
-                            detection_cooldown = time()
+            elif len(rawdata) >= 200:
+                if "460000000001010101010101010101010101000000000" in hexdata:
+                    print("Game started")
 
-                    elif re.search("^(01).{6}(0005).*(401c460000401c46)", hexdata):
-                        print("Meeting started")
+                    mute_time = time()+game_start_mute_delay
+                    mute_action = 0
+                    detection_cooldown = time()
 
-                        mute_time = time()
-                        mute_action = 1
-                        detection_cooldown = time()
+            elif 16 >= len(rawdata) >= 15:
+                regex = re.search("^(01).{6}(0005).{6}(80).{2}(0002)", hexdata)
+                if regex is not None:
+                    print("Meeting ended")
 
-            if mute_time != 0 and mute_time <= time():
-                mute_time = 0
-                for member in voice_channel.members:
-                    try:
-                        await member.edit(mute=(not bool(mute_action)))
-                    except:
-                        print("Doesn't have permissions to mute users. (or an error)")
+                    mute_time = time()+meeting_end_mute_delay
+                    mute_action = 0
+                    detection_cooldown = time()
 
-                    await asyncio.sleep(delay_between_mutes)
+            elif re.search("^(01).{6}(0005).*(401c460000401c46)", hexdata):
+                print("Meeting started")
 
-                try:
-                    await voice_channel.set_permissions(voice_channel.guild.default_role, connect=bool(mute_action))
-                except:
-                    print("Doesn't have permissions to change if users can connect to the voice channel. (or an error)")
+                mute_time = time()
+                mute_action = 1
+                detection_cooldown = time()
 
-                print("mute action:", mute_action, bool(mute_action))
-
-client.loop.create_task(controller())
-client.run(file_data["discord"]["token"])
+        mute_action_function()
 
 
-## Trash
-
-# @client.event
-# async def on_ready():
-#     print("Discord bot is ready")
-
-
-# f'{tshark_path} -i {interface} -T fields -Y "{filter_}" {log_format}'
+main()
