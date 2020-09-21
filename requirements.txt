@@ -1,2 +1,3 @@
 discord.py==1.4.1
 commentjson==0.8.3
+pyshark==0.4.2.11
