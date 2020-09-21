@@ -93,7 +93,7 @@ def main():
     mute_action_function()
 
     capture = pyshark.LiveCapture(interface=interface, tshark_path=tshark_location,
-                                  display_filter=f"udp.port == 22023 and data.len > 4 { '' if client_port == '' else 'and udp.port == '+str(client_port) }")
+                                  display_filter=f"udp.port == {server_port} and data.len > 4 { '' if client_port == '' else 'and udp.port == '+str(client_port) }")
 
     for packet in capture.sniff_continuously():
         hexdata = str(packet.data.data)
