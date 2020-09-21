@@ -1,6 +1,6 @@
 {
   "settings": {
-    "tshark_location": "tshark",
+    "tshark_location": "C:\\Program Files (x86)\\Wireshark\\tshark.exe",
     "interface": "Wi-Fi",
     "server_port": "22023", // Should be this port
     "client_port": "", // Leave blank for any port
@@ -13,7 +13,7 @@
   },
 
   "preferences": {
-    "meeting_end_mute_delay": 8,
-    "game_start_mute_delay": 5
+    "meeting_end_mute_delay": 6,
+    "game_start_mute_delay": 1
   }
 }
