@@ -14,6 +14,7 @@
 
   "preferences": {
     "meeting_end_mute_delay": 6,
-    "game_start_mute_delay": 1
+    "game_start_mute_delay": 1,
+    "unmute_users_on_other_channels": true // Turn off server mutes for users once they join a channel other than the among us channel.
   }
 }
