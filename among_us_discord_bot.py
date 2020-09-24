@@ -60,7 +60,7 @@ def runDiscord():
     @client.event
     async def on_voice_state_update(member, before, after):
         global mute_action
-        if after.channel.id is not None:
+        if after.channel is not None:
             if after.channel.id == settings.channel_voice_id:
                 await mute_member(member, mute_action)
             elif settings.unmute_users_on_other_channels:
