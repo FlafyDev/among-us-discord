@@ -99,7 +99,7 @@ def main():
     while not discord_ready:
         sleep(0.5)
 
-    detection_cooldown = 0
+    detection_cooldown_endgame = 0
     mute_action_function()
     capture = pyshark.LiveCapture(interface=settings.interface, tshark_path=settings.tshark_location,
                                   display_filter=f"udp.port == {settings.server_port} and data.len > 4 "
@@ -109,37 +109,33 @@ def main():
         hexdata = str(packet.data.data)
         rawdata = bytes.fromhex(packet.data.data)
 
-        if time()-detection_cooldown >= 4:
-            if ("EndGame".encode() in rawdata and rawdata[3:6] == bytes.fromhex("120005")) or (rawdata[3:6] == bytes.fromhex("060008")):
-                print("Game ended")
+        if (time() - detection_cooldown_endgame > 4) and ("EndGame".encode() in rawdata and rawdata[3:6] == bytes.fromhex("120005")) or (rawdata[3:6] == bytes.fromhex("060008")):
+            print("Game ended")
 
-                mute_time = time()
-                mute_action = 1
-                detection_cooldown = time()
+            mute_time = time()
+            mute_action = 1
+            detection_cooldown_endgame = time()
 
-            elif len(rawdata) >= 200:
-                if "460000000001010101010101010101010101000000000" in hexdata:
-                    print("Game started")
+        elif len(rawdata) >= 200:
+            if "460000000001010101010101010101010101000000000" in hexdata:
+                print("Game started")
 
-                    mute_time = time()+settings.game_start_mute_delay
-                    mute_action = 0
-                    detection_cooldown = time()
+                mute_time = time()+settings.game_start_mute_delay
+                mute_action = 0
 
-            elif 16 >= len(rawdata) >= 15:
-                regex = re.search("^(01).{6}(0005).{6}(80).{2}(0002)", hexdata)
-                if regex is not None:
-                    print("Meeting ended")
+        elif 16 >= len(rawdata) >= 15:
+            regex = re.search("^(01).{6}(0005).{6}(80).{2}(0002).*(16)$", hexdata)
+            if regex is not None:
+                print("Meeting ended")
+                
+                mute_time = time()+settings.meeting_end_mute_delay
+                mute_action = 0
 
-                    mute_time = time()+settings.meeting_end_mute_delay
-                    mute_action = 0
-                    detection_cooldown = time()
+        elif re.search("^(01).{6}(0005).*(401c460000401c46)", hexdata):
+            print("Meeting started")
 
-            elif re.search("^(01).{6}(0005).*(401c460000401c46)", hexdata):
-                print("Meeting started")
-
-                mute_time = time()
-                mute_action = 1
-                detection_cooldown = time()
+            mute_time = time()
+            mute_action = 1
 
         mute_action_function()
 
