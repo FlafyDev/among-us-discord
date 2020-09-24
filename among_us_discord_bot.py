@@ -6,20 +6,44 @@ import discord
 import pyshark
 import re
 
-try:
-    json_file = open("AmongUsDB.json")
-except FileNotFoundError:
-    json_file = open("AmongUsDB.json.json")
+def load_json():
+    global settings
+    try:
+        json_file = open("AmongUsDB.json")
+    except FileNotFoundError:
+        json_file = open("AmongUsDB.json.json")
 
-file_data = commentjson.load(json_file)
-json_file.close()
-print("Settings from file:", file_data)
+    settings_data = commentjson.load(json_file)
+    json_file.close()
+    print("Settings from file:", settings_data)
+
+    class Settings:
+        def __init__(self, json_data):
+            self.meeting_end_mute_delay = int(json_data["preferences"]["meeting_end_mute_delay"])
+            self.game_start_mute_delay = int(json_data["preferences"]["game_start_mute_delay"])
+            self.tshark_location = json_data["settings"]["tshark_location"]
+            self.interface = json_data["settings"]["interface"]
+            self.server_port = int(json_data["settings"]["server_port"])
+            self.client_port = json_data["settings"]["client_port"]
+            if self.client_port != "":
+                self.client_port = int(self.client_port)
+            self.delay_between_mutes = float(json_data["settings"]["delay_between_mutes"])
+            self.channel_voice_id = int(json_data["discord"]["channel_voice_id"])
+            self.bot_token = json_data["discord"]["token"]
+            self.unmute_users_on_other_channels = json_data["preferences"]["unmute_users_on_other_channels"]
+
+    settings = Settings(settings_data)
+
+settings = None
+load_json()
 
 discord_ready = False
-discord_mute_voice_chat = None
 discord_voice_channel = None
 discord_mute_member = None
 discord_loop = None
+
+mute_action = 1  # 0 - mute | 1 - unmute
+mute_time = 1
 
 def runDiscord():
     global discord_loop
@@ -27,73 +51,59 @@ def runDiscord():
     asyncio.set_event_loop(discord_loop)
     client = discord.Client()
 
-    async def mute_voice_chat(voice_chat, mute_action):
+    async def mute_member(member, mute_action_):
         try:
-            await voice_chat.set_permissions(discord_voice_channel.guild.default_role, connect=bool(mute_action))
-        except Exception as e:
-            print("Doesn't have permissions to change if users can connect to the voice channel. (or an error)", e)
-        pass
-
-    async def mute_member(member, mute_action):
-        try:
-            await member.edit(mute=(not bool(mute_action)))
+            await member.edit(mute=(not bool(mute_action_)))
         except Exception as e:
             print("Doesn't have permissions to mute/unmute users. (or an error)", e)
 
     @client.event
-    async def on_ready():
-        global discord_ready, discord_mute_voice_chat, discord_voice_channel, discord_mute_member
+    async def on_voice_state_update(member, before, after):
+        global mute_action
+        if after.channel.id is not None:
+            if after.channel.id == settings.channel_voice_id:
+                await mute_member(member, mute_action)
+            elif settings.unmute_users_on_other_channels:
+                await mute_member(member, 1)
 
-        discord_mute_voice_chat = mute_voice_chat
+    @client.event
+    async def on_ready():
+        global discord_ready, discord_voice_channel, discord_mute_member
+
         discord_mute_member = mute_member
-        channel_voice_id = int(file_data["discord"]["channel_voice_id"])
-        discord_voice_channel = client.get_channel(channel_voice_id)
+        discord_voice_channel = client.get_channel(settings.channel_voice_id)
 
         print("Bot is ready")
         discord_ready = True
 
-    client.run(file_data["discord"]["token"])
+    client.run(settings.bot_token)
 
 discord_thread = threading.Thread(target=runDiscord)
 discord_thread.daemon = False
 discord_thread.start()
 
+def mute_action_function():
+    global mute_action, mute_time
+    if mute_time != 0 and mute_time <= time():
+        mute_time = 0
+        for member in discord_voice_channel.members:
+            asyncio.run_coroutine_threadsafe(discord_mute_member(member, mute_action), discord_loop).result()
+            sleep(settings.delay_between_mutes)
+
+        print("mute action:", mute_action, bool(mute_action))
+
+
 def main():
-    print("in main")
+    global mute_action, mute_time
+    print("Waiting for bot to ready...")
     while not discord_ready:
         sleep(0.5)
 
-    meeting_end_mute_delay = int(file_data["preferences"]["meeting_end_mute_delay"])
-    game_start_mute_delay = int(file_data["preferences"]["game_start_mute_delay"])
-
-    tshark_location = file_data["settings"]["tshark_location"]
-    interface = file_data["settings"]["interface"]
-    server_port = int(file_data["settings"]["server_port"])
-    client_port = file_data["settings"]["client_port"]
-    if client_port != "":
-        client_port = int(client_port)
-    delay_between_mutes = float(file_data["settings"]["delay_between_mutes"])
-
     detection_cooldown = 0
-    mute_action = 1 # 0 - mute | 1 - unmute
-    mute_time = 1
-
-    def mute_action_function():
-        nonlocal mute_action, mute_time
-        if mute_time != 0 and mute_time <= time():
-            mute_time = 0
-            for member in discord_voice_channel.members:
-                asyncio.run_coroutine_threadsafe(discord_mute_member(member, mute_action), discord_loop).result()
-                sleep(delay_between_mutes)
-
-            asyncio.run_coroutine_threadsafe(discord_mute_voice_chat(discord_voice_channel, mute_action), discord_loop).result()
-
-            print("mute action:", mute_action, bool(mute_action))
-
     mute_action_function()
-
-    capture = pyshark.LiveCapture(interface=interface, tshark_path=tshark_location,
-                                  display_filter=f"udp.port == {server_port} and data.len > 4 { '' if client_port == '' else 'and udp.port == '+str(client_port) }")
+    capture = pyshark.LiveCapture(interface=settings.interface, tshark_path=settings.tshark_location,
+                                  display_filter=f"udp.port == {settings.server_port} and data.len > 4 "
+                                                 f"{ '' if settings.client_port == '' else 'and udp.port == '+str(settings.client_port) }")
 
     for packet in capture.sniff_continuously():
         hexdata = str(packet.data.data)
@@ -111,7 +121,7 @@ def main():
                 if "460000000001010101010101010101010101000000000" in hexdata:
                     print("Game started")
 
-                    mute_time = time()+game_start_mute_delay
+                    mute_time = time()+settings.game_start_mute_delay
                     mute_action = 0
                     detection_cooldown = time()
 
@@ -120,7 +130,7 @@ def main():
                 if regex is not None:
                     print("Meeting ended")
 
-                    mute_time = time()+meeting_end_mute_delay
+                    mute_time = time()+settings.meeting_end_mute_delay
                     mute_action = 0
                     detection_cooldown = time()
 
@@ -132,6 +142,5 @@ def main():
                 detection_cooldown = time()
 
         mute_action_function()
-
 
 main()
