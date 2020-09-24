@@ -90,7 +90,7 @@ def mute_action_function():
             asyncio.run_coroutine_threadsafe(discord_mute_member(member, mute_action), discord_loop).result()
             sleep(settings.delay_between_mutes)
 
-        print("mute action:", mute_action, bool(mute_action))
+        print("mute action:", mute_action)
 
 
 def main():
@@ -109,7 +109,7 @@ def main():
         hexdata = str(packet.data.data)
         rawdata = bytes.fromhex(packet.data.data)
 
-        if time()-detection_cooldown >= 2:
+        if time()-detection_cooldown >= 4:
             if ("EndGame".encode() in rawdata and rawdata[3:6] == bytes.fromhex("120005")) or (rawdata[3:6] == bytes.fromhex("060008")):
                 print("Game ended")
 
