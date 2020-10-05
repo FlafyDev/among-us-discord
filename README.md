@@ -1,4 +1,4 @@
-# Among Us Friendly Bot - BETA
+# Among Us Friendly Bot - BETA AND STILL IN DEVELOPMENT
 **This is still in beta, so if you find any problems let me know.**  
 My second Discord bot for Among Us.  
 This bot mutes discord users according to what happens in Among Us.
