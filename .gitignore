@@ -1,0 +1,7 @@
+bot/bot_venv/
+client/client_venv/
+bot/settings.json
+
+**/.idea/
+**/__pycache__/
+trash/

@@ -1,0 +1,40 @@
+[
+    {
+        "title": "Help",
+        "description": "This Discord bot mutes players between meetings in a voice channel.\nHere are the instructions on how to use the bot.",
+        "color": 10092288,
+        "fields": [
+            {
+                "name": "==== Rooms ====",
+                "value": "Creates a room(voice channel) for your game.\nRooms will automatically close if their owner disconnects."
+            },
+            {
+                "name": "!au room create",
+                "value": "Creates a room(voice channel) for your game."
+            },
+            {
+                "name": "!au room list",
+                "value": "Returns a list of all the rooms available at the moment."
+            },
+            {
+                "name": "!au room invite",
+                "value": "Returns a link for everyone to join your room."
+            },
+            {
+                "name": "!au room restart",
+                "value": "Unmutes everyone in your room."
+            },
+            {
+                "name": "!au room close",
+                "value": "Closes your room."
+            },
+            {
+                "name": "==== The Client ====",
+                "value": "To make a room work and function according to what happens in Among Us, the owner of the room must have the client running on his PC.\nAfter downloading the client and opening it, copy the room's `key` the Among Us Bot DMed and paste it in the textbox in the client.\n\nDownload link: link be like brr"
+            }
+        ],
+        "footer": {
+            "text": "Made by Flafy"
+        }
+    }
+]
