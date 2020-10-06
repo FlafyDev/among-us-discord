@@ -64,7 +64,7 @@ def run_discord(settings, embeds):
                 room_ = rooms[room_]
                 if after.channel.id == room_.voice.id:
                     found_room = True
-                    await room_.refresh()
+                    add_room_to_refresh(room_)
                     break
             if not found_room:
                 await mute_member(member, 0)
@@ -123,7 +123,7 @@ def run_discord(settings, embeds):
         if ctx.author.id in rooms:
             room_ = rooms[ctx.author.id]
             room_.mute = 0
-            await room_.refresh()
+            add_room_to_refresh(room_)
             await room_.generate_secret()
 
             await ctx.send(f"Room restarted.")

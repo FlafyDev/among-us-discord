@@ -70,7 +70,7 @@ class Room(object):
         print(int(time()), "-- done refresh")
 
     def generate_code_for_client(self):
-        return base64.b64encode(f"{self.settings.bot_server_ip}:{self.settings.bot_server_port}:".encode("utf-8"))\
+        return base64.b64encode(f"{self.settings.self.bot_server_url}$".encode("utf-8"))\
             .decode("utf-8") + self.secret_key
 
     async def set_code(self, room_code: str):

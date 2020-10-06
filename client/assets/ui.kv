@@ -1,0 +1,66 @@
+<MyGrid>
+
+    input_key: input_key
+    output: output
+    label_room_code: label_room_code
+    label_current_state: label_current_state
+    label_bot_server: label_bot_server
+    label_current_key: label_current_key
+
+    canvas.before:
+        Color:
+            rgba: 1, 1, 1, 1
+    GridLayout:
+        cols: 1
+        size: root.width, root.height
+
+        GridLayout:
+            cols: 1
+            size_hint: None, None
+            size: root.width, 150
+
+            GridLayout:
+                size_hint: 0, 0.5
+                cols: 2
+
+                Label:
+                    text: "Key"
+                    size_hint: None, 1
+
+                TextInput:
+                    id: input_key
+                    hint_text: "Paste your key here"
+                    multiline: False
+                    padding_y: [self.height / 2.0 - (self.line_height / 2.0) * len(self._lines), 0]
+                    on_text: root.changed_key()
+
+            GridLayout:
+                cols:1
+                Label:
+                    id: label_room_code
+                    markup: True
+                    text: "[b]Room code:[/b] ----"
+                Label:
+                    id: label_current_state
+                    markup: True
+                    text: "[b]Current state:[/b] ----"
+                Label:
+                    id: label_bot_server
+                    markup: True
+                    text: "[b]Bot's server:[/b] ----"
+                Label:
+                    id: label_current_key
+                    markup: True
+                    text: "[b]Current key:[/b] ----"
+                Label:
+                    markup: True
+                    color: .4, .6, 1, 1
+                    text: "[b][ref=a]github.com/FlafyDev/among-us-discord[/ref][/b] v0.1"
+                    on_ref_press: root.open_repo()
+
+        TextInput:
+            id: output
+            text: "Program started\n"
+            readonly: True
+            background_color: .8, .8, .8, 1
+

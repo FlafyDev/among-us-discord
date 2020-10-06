@@ -1,18 +1,22 @@
 import binascii
 import threading
+import webbrowser
 from enum import Enum
 from time import sleep
 from scapy.layers.inet6 import UDP, IP
 from scapy.sendrecv import sniff
-from kivy.uix.widget import Widget
-from kivy.app import App
-from kivy.config import Config
-from kivy.core.window import Window
-from kivy.properties import ObjectProperty
+
+
+
+# from kivy.uix.widget import Widget
+# from kivy.app import App
+# # from kivy.config import Config
+# # from kivy.core.window import Window
+# from kivy.properties import ObjectProperty
+
 from communicator import Communicator, valid_and_different_key
 from crewmate.packets import RPC, RoomMessageType, RPCAction, RoomMessage, GameData, GameDataType
 from utils import *
-import socket
 
 enable_sniff = False
 secret_key = ""
@@ -104,6 +108,7 @@ def dissector(packet):
             elif state != States.meeting_ended and rpc.rpcAction == RPCAction.CLOSE:
                 print("Meeting ended", isRPC, isRoomMessage)
                 change_state(States.meeting_ended)
+                sleep(7)
                 communicator.set_mute(1)
 
 # def get_ports(packet):
@@ -146,47 +151,52 @@ def get_communicator():
                 return
             output_delete_lines(elements.output, 2)
 
+
+class MyGrid(Widget):
+    input_key = ObjectProperty(None)
+    output = ObjectProperty(None)
+    label_room_code = ObjectProperty(None)
+    label_current_state = ObjectProperty(None)
+    label_bot_server = ObjectProperty(None)
+    label_current_key = ObjectProperty(None)
+
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        elements.output = self.output
+        elements.label_room_code = self.label_room_code
+        elements.label_current_state = self.label_current_state
+        elements.label_bot_server = self.label_bot_server
+        elements.label_current_key = self.label_current_key
+
+        sniffing_thread = threading.Thread(target=lambda:
+        sniff(prn=dissector, filter=f"udp", store=False,
+              started_callback=lambda: output_print(elements.output, f"listening to packets.")))
+        sniffing_thread.daemon = True
+        sniffing_thread.start()
+
+    def changed_key(self):
+        global secret_key, comm_thread, enable_sniff
+        self.input_key.text = self.input_key.text.strip()
+        if valid_and_different_key(self.input_key.text, secret_key):
+            secret_key = self.input_key.text.strip()
+            output_print(elements.output, f"Set key: {secret_key}")
+            enable_sniff = False
+            comm_thread = threading.Thread(target=get_communicator)
+            comm_thread.daemon = True
+            comm_thread.start()
+
+    def open_repo(self):
+        webbrowser.open('https://github.com/FlafyDev/among-us-discord')
+
+class MyApp(App):
+    def build(self):
+        # self.icon = 'assets\\bot_icon.png'
+        self.title = "Flafy's Among Us Bot - Client"
+        # self.load_kv('assets\\ui.kv')
+        # return MyGrid()
+
 if __name__ == "__main__":
-    Window.clearcolor = (.2, .2, .2, 1)
-    Config.set('input', 'mouse', 'mouse,multitouch_on_demand')
-
-    class MyGrid(Widget):
-        input_key = ObjectProperty(None)
-        output = ObjectProperty(None)
-        label_room_code = ObjectProperty(None)
-        label_current_state = ObjectProperty(None)
-        label_bot_server = ObjectProperty(None)
-        label_current_key = ObjectProperty(None)
-
-        def __init__(self, **kwargs):
-            super().__init__(**kwargs)
-            elements.output = self.output
-            elements.label_room_code = self.label_room_code
-            elements.label_current_state = self.label_current_state
-            elements.label_bot_server = self.label_bot_server
-            elements.label_current_key = self.label_current_key
-
-            sniffing_thread = threading.Thread(target=lambda:
-            sniff(prn=dissector, filter=f"udp", store=False,
-                  started_callback=lambda: output_print(elements.output, f"listening to packets.")))
-            sniffing_thread.daemon = True
-            sniffing_thread.start()
-
-        def changed_key(self):
-            global secret_key, comm_thread, enable_sniff
-            self.input_key.text = self.input_key.text.strip()
-            if valid_and_different_key(self.input_key.text, secret_key):
-                secret_key = self.input_key.text.strip()
-                output_print(elements.output, f"Set key: {secret_key}")
-                enable_sniff = False
-                comm_thread = threading.Thread(target=get_communicator)
-                comm_thread.daemon = True
-                comm_thread.start()
-
-    class MyApp(App):
-        def build(self):
-            self.title = 'Among Us Mute'
-            self.load_kv('ui.kv')
-            return MyGrid()
+    # Window.clearcolor = (.2, .2, .2, 1)
+    # Config.set('input', 'mouse', 'mouse,multitouch_on_demand')
 
     MyApp().run()

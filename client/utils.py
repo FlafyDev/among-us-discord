@@ -31,11 +31,14 @@ def int_to_room_code_v2(code):
             _V2[b // (26 * 26 * 26) % 26]
 
 def get_local_ip():
-    s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-    s.connect(("8.8.8.8", 80))
-    ip = s.getsockname()[0]
-    s.close()
-    return ip
+    try:
+        s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        s.connect(("8.8.8.8", 80))
+        ip = s.getsockname()[0]
+        s.close()
+        return ip
+    except:
+        return "0.0.0.0"
 
 def get_among_us_port(udp_layer, ip_layer, local_ip):
     if 20000 <= udp_layer.dport <= 29999 and ip_layer.src == local_ip:

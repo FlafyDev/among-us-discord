@@ -1,22 +1,16 @@
 import requests
 import base64
-from utils import change_label_text
+from urllib.parse import urljoin
 
 class FormattedKey:
     def __init__(self,  key):
         key = key.strip()
 
-        self.data = base64.b64decode(key.encode("utf-8")).decode("utf-8").split(":")
+        self.data = base64.b64decode(key.encode("utf-8")).decode("utf-8").split("$")
         self.data_base64 = key
 
         self.url = self.data[0]
-        if not self.url.startswith("http"):
-            self.url = "http://" + self.url
-
-        self.port = self.data[1]
-        self.url = f"{self.url}:{self.port}"
-
-        self.secret_key = self.data[2]
+        self.secret_key = self.data[1]
         self.secret_key_base64 = base64.b64encode(self.secret_key.encode("utf-8")).decode("utf-8")
 
 def valid_and_different_key(new_key, old_key=""):
@@ -45,7 +39,7 @@ class Communicator:
     def set_mute(self, mute):
         print("mute set to", mute)
         try:
-            return requests.post(f"{self.key.url}/mute", params={
+            return requests.post(urljoin(self.key.url, 'mute'), params={
                 "secret": self.key.secret_key_base64,
                 "mute": str(int(mute))
             }).status_code == 200
@@ -55,7 +49,7 @@ class Communicator:
 
     def set_code(self, room_code):
         try:
-            return requests.post(f"{self.key.url}/roomCode", params={
+            return requests.post(urljoin(self.key.url, 'roomCode'), params={
                 "secret": self.key.secret_key_base64,
                 "roomCode": room_code
             }).status_code == 200
@@ -65,7 +59,7 @@ class Communicator:
 
     def test_server(self):
         try:
-            req =  requests.post(f"{self.key.url}/check", params={
+            req =  requests.post(urljoin(self.key.url, 'check'), params={
                 "secret": self.key.secret_key_base64
             })
             return req.status_code == 200, req.status_code
