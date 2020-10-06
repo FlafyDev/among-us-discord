@@ -1,7 +1,7 @@
 # Flafy's Among Us Bot - BETA
 
 <p align="center">
-  <img src="../icon-files/bot_icon_small.png">
+  <img src="icon-files/bot_icon_small.png">
 </p>
 
 **This is still in beta, so if you find any problems let me know.**  
