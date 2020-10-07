@@ -1,7 +1,7 @@
 # Flafy's Among Us Bot - BETA
 
 <p align="center">
-  <img src="icon-files/bot_icon_small.png">
+  <img src="icon-files/bot_icon_256.png">
 </p>
 
 **This is still in beta, so if you find any problems let me know.**  
@@ -19,15 +19,17 @@ The prefix for commands is `!au`
 
 ## How does it work
 #### Room
-A Room is temporary voice channel that a user creates and owns until they leave it.  
-A room has a maximum of 10 users and.  
+A Room is a temporary voice channel that a user creates and owns until they leave it.  
+A room has a maximum of 10 users.  
 For how to use the rooms do: `!au help`
 #### Client
 ###### Currently only tested on Windows.    
 Only the owner of a room must use the client.  
 The client is used for the bot to know what's going on in the game.  
 
-Download link in releases: 
+Download link in [releases](https://github.com/FlafyDev/among-us-discord/releases)
+
+![example image of the client](client_example.png)
 
 ## Setup the bot - Medium difficulty
 This bot runs a web server to communicate with the user.
@@ -51,10 +53,13 @@ The `settings.json` file must be in the bot's folder and follow this format:
 }
 ```
 
+You DON'T have to build a special client to work with the bot.  
+The permissions the bot requires for Discord are: `Send Messages`, `Read Text Channels & See Voice Channels`, `Manage Channels` and `Mute Members`.
+
 ## Credits
 Crewmate - https://github.com/MythicManiac/Crewmate
 
 ---
 #### Maybe in the future
 * Only unmutes alive players when there is a meeting, ghosts(dead) players will remain muted till the game ends
-* Tracks points for every imposter win(and maybe kill too?). Problems are that it can get competitive and it's easy to fake
+* Tracks points for every imposter win(and maybe kill too?). Problems are that it can get competitive and it's easy to cheat

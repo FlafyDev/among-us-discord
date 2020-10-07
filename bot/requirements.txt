@@ -2,7 +2,7 @@ aiohttp==3.6.2
 async-timeout==3.0.1
 attrs==20.2.0
 chardet==3.0.4
-commentjson==0.8.3
+commentjson==0.9.0
 discord.py==1.5.0
 gunicorn==20.0.4
 idna==2.10

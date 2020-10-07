@@ -30,9 +30,13 @@
             },
             {
                 "name": "==== The Client ====",
-                "value": "To make a room work and function according to what happens in Among Us, the owner of the room must have the client running on his PC.\nAfter downloading the client and opening it, copy the room's `key` the Among Us Bot DMed and paste it in the textbox in the client.\n\nDownload link: link be like brr"
+                "value": "To make a room work and function according to what happens in Among Us, the owner of the room must have the client running on his PC.\nAfter downloading the client and opening it, copy the room's `key` the Among Us Bot DMed and paste it in the textbox in the client.\n\nDownload link: https://github.com/FlafyDev/among-us-discord/releases"
             }
         ],
+        "author": {
+            "name": "Flafy's Among Us Bot",
+            "icon_url": "https://raw.githubusercontent.com/FlafyDev/among-us-discord/version-2/icon-files/bot_icon_128.png"
+        },
         "footer": {
             "text": "github.com/FlafyDev/among-us-discord"
         }

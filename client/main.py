@@ -1,19 +1,9 @@
-import binascii
 import threading
 import webbrowser
-from enum import Enum
 from time import sleep
 from scapy.layers.inet6 import UDP, IP
 from scapy.sendrecv import sniff
-
-
-
-# from kivy.uix.widget import Widget
-# from kivy.app import App
-# # from kivy.config import Config
-# # from kivy.core.window import Window
-# from kivy.properties import ObjectProperty
-
+import eel
 from communicator import Communicator, valid_and_different_key
 from crewmate.packets import RPC, RoomMessageType, RPCAction, RoomMessage, GameData, GameDataType
 from utils import *
@@ -26,19 +16,21 @@ game_players_data = None
 state = None
 communicator = None
 current_room_code = None
+meeting_end_mute_delay = 7
 among_us_port = 22023
 local_ip = get_local_ip()
-elements = Elements()
+eel.init("web")
+app_utils = AppUtils(eel)
 
 def change_state(state_: States):
     global state
     if state != state_:
-        output_print(elements.output, "State changed to:", state_.name)
-        change_label_text(elements.label_current_state, state_.name)
+        app_utils.output_print("State changed to:", state_.name)
+        app_utils.set_current_state(state_.name)
         state = state_
 
 def dissector(packet):
-    global game_players_data, record_data, state, communicator, enable_sniff, current_room_code, among_us_port
+    global game_players_data, record_data, state, communicator, enable_sniff, current_room_code, among_us_port, meeting_end_mute_delay
     # print(bytes(packet).hex())
 
     if not enable_sniff:
@@ -58,7 +50,7 @@ def dissector(packet):
         prev_port = among_us_port
         among_us_port = get_among_us_port(udp_layer, ip_layer, local_ip)
         if prev_port != among_us_port:
-            output_print(elements.output, "Found Among Us port:", among_us_port)
+            app_utils.output_print("Found Among Us port:", among_us_port)
 
         room_code = int.from_bytes(data[4:8], byteorder="little", signed=True)
         room_code = int_to_room_code_v2(room_code)
@@ -67,8 +59,8 @@ def dissector(packet):
             change_state(States.joined)
             communicator.set_mute(0)
             current_room_code = room_code
-            output_print(elements.output, "Room code:", current_room_code)
-            change_label_text(elements.label_room_code, current_room_code)
+            app_utils.output_print("Room code:", current_room_code)
+            app_utils.set_room_code(current_room_code)
             communicator.set_code(room_code)
 
     isRoomMessage = RoomMessage in packet
@@ -108,7 +100,7 @@ def dissector(packet):
             elif state != States.meeting_ended and rpc.rpcAction == RPCAction.CLOSE:
                 print("Meeting ended", isRPC, isRoomMessage)
                 change_state(States.meeting_ended)
-                sleep(7)
+                sleep(meeting_end_mute_delay)
                 communicator.set_mute(1)
 
 # def get_ports(packet):
@@ -123,15 +115,15 @@ def get_communicator():
     initial_comm_thread = comm_thread
 
     while True:
-        output_print(elements.output, "Connecting to the bot's server...")
+        app_utils.output_print("Connecting to the bot's server...")
         communicator = Communicator(secret_key)
         server_on, status_code = communicator.test_server()
         print("Server is working and key is valid:", server_on, status_code)
+        app_utils.set_current_key(secret_key)
+        app_utils.set_bot_server(communicator.key.url)
         if server_on:
-            change_label_text(elements.label_current_key, secret_key)
-            change_label_text(elements.label_bot_server, communicator.key.url)
-            output_delete_lines(elements.output, 1)
-            output_print(elements.output, "Connected to the bot's server!")
+            app_utils.output_remove_lines(1)
+            app_utils.output_print("Connected to the bot's server!")
             enable_sniff = True
             communicator.set_mute(0)
             return
@@ -139,64 +131,82 @@ def get_communicator():
             print("Failed testing. Status code:", status_code)
             if check_abort():
                 return
-            output_delete_lines(elements.output, 1)
+            app_utils.output_remove_lines(1)
             if status_code == 401:
-                output_print(elements.output, "Key is invalid!")
+                app_utils.output_print("Key is invalid!")
             else:
-                output_print(elements.output, "Bot's server is off!")
+                app_utils.output_print("Bot's server is off!")
 
-            output_print(elements.output, "Trying again in a 10 seconds")
+            app_utils.output_print("Trying again in a 10 seconds")
             sleep(10)
             if check_abort():
                 return
-            output_delete_lines(elements.output, 2)
+            app_utils.output_remove_lines(2)
 
+@eel.expose
+def update_key(key):
+    print(key)
+    global secret_key, comm_thread, enable_sniff
+    if valid_and_different_key(key, secret_key):
+        secret_key = key
+        app_utils.output_print(f"Set key: {secret_key}")
+        enable_sniff = False
+        comm_thread = threading.Thread(target=get_communicator)
+        comm_thread.daemon = True
+        comm_thread.start()
 
-class MyGrid(Widget):
-    input_key = ObjectProperty(None)
-    output = ObjectProperty(None)
-    label_room_code = ObjectProperty(None)
-    label_current_state = ObjectProperty(None)
-    label_bot_server = ObjectProperty(None)
-    label_current_key = ObjectProperty(None)
+@eel.expose
+def update_mute_delay_meeting(num):
+    global meeting_end_mute_delay
+    meeting_end_mute_delay = num
 
-    def __init__(self, **kwargs):
-        super().__init__(**kwargs)
-        elements.output = self.output
-        elements.label_room_code = self.label_room_code
-        elements.label_current_state = self.label_current_state
-        elements.label_bot_server = self.label_bot_server
-        elements.label_current_key = self.label_current_key
+@eel.expose
+def open_repo():
+    webbrowser.open('https://github.com/FlafyDev/among-us-discord')
 
-        sniffing_thread = threading.Thread(target=lambda:
-        sniff(prn=dissector, filter=f"udp", store=False,
-              started_callback=lambda: output_print(elements.output, f"listening to packets.")))
-        sniffing_thread.daemon = True
-        sniffing_thread.start()
+def main():
+    sniffing_thread = threading.Thread(target=lambda:
+    sniff(prn=dissector, filter=f"udp", store=False,
+          started_callback=lambda: app_utils.output_print(f"listening to packets.")))
+    sniffing_thread.daemon = True
+    sniffing_thread.start()
+    eel.start('main.html')
 
-    def changed_key(self):
-        global secret_key, comm_thread, enable_sniff
-        self.input_key.text = self.input_key.text.strip()
-        if valid_and_different_key(self.input_key.text, secret_key):
-            secret_key = self.input_key.text.strip()
-            output_print(elements.output, f"Set key: {secret_key}")
-            enable_sniff = False
-            comm_thread = threading.Thread(target=get_communicator)
-            comm_thread.daemon = True
-            comm_thread.start()
+if __name__ == '__main__':
+    main()
 
-    def open_repo(self):
-        webbrowser.open('https://github.com/FlafyDev/among-us-discord')
-
-class MyApp(App):
-    def build(self):
-        # self.icon = 'assets\\bot_icon.png'
-        self.title = "Flafy's Among Us Bot - Client"
-        # self.load_kv('assets\\ui.kv')
-        # return MyGrid()
-
-if __name__ == "__main__":
-    # Window.clearcolor = (.2, .2, .2, 1)
-    # Config.set('input', 'mouse', 'mouse,multitouch_on_demand')
-
-    MyApp().run()
+# class MyGrid(Widget):
+#     input_key = ObjectProperty(None)
+#     output = ObjectProperty(None)
+#     label_room_code = ObjectProperty(None)
+#     label_current_state = ObjectProperty(None)
+#     label_bot_server = ObjectProperty(None)
+#     label_current_key = ObjectProperty(None)
+#
+#     def __init__(self, **kwargs):
+#         super().__init__(**kwargs)
+#         elements.output = self.output
+#         elements.label_room_code = self.label_room_code
+#         elements.label_current_state = self.label_current_state
+#         elements.label_bot_server = self.label_bot_server
+#         elements.label_current_key = self.label_current_key
+#
+#         sniffing_thread = threading.Thread(target=lambda:
+#         sniff(prn=dissector, filter=f"udp", store=False,
+#               started_callback=lambda: output_print(elements.output, f"listening to packets.")))
+#         sniffing_thread.daemon = True
+#         sniffing_thread.start()
+#
+#     def changed_key(self):
+#         global secret_key, comm_thread, enable_sniff
+#         self.input_key.text = self.input_key.text.strip()
+#         if valid_and_different_key(self.input_key.text, secret_key):
+#             secret_key = self.input_key.text.strip()
+#             output_print(elements.output, f"Set key: {secret_key}")
+#             enable_sniff = False
+#             comm_thread = threading.Thread(target=get_communicator)
+#             comm_thread.daemon = True
+#             comm_thread.start()
+#
+#     def open_repo(self):
+#         webbrowser.open('https://github.com/FlafyDev/among-us-discord')

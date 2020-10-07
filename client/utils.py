@@ -10,13 +10,6 @@ class States(Enum):
     game_ended = 3
     joined = 4
 
-class Elements:
-    output = None
-    label_room_code = None
-    label_current_state = None
-    label_bot_server = None
-    label_current_key = None
-
 def int_to_room_code_v2(code):
     if isinstance(code, bytes):
         code = int.from_bytes(code, byteorder='little')
@@ -47,13 +40,24 @@ def get_among_us_port(udp_layer, ip_layer, local_ip):
         port = udp_layer.sport
     return port
 
-def output_print(output, *args, sep=' ', end='\n'):
-    output.text += sep.join(str(x) for x in args) + end
+class AppUtils:
+    def __init__(self, eel=None):
+        self.eel = eel
 
-def output_delete_lines(output, lines=1):
-    for _ in range(lines+1):
-        output.text = output.text[:output.text.rfind('\n')]
-    output_print(output)
+    def output_print(self, *args, sep=' ', end='\n'):
+        self.eel.add_output(sep.join(str(x) for x in args) + end)
 
-def change_label_text(label, text):
-    label.text = f"{label.text.split('[/b]')[0]}[/b] {text}"
+    def output_remove_lines(self, lines=1):
+        self.eel.output_remove_lines(lines)
+
+    def set_room_code(self, text):
+        self.eel.set_room_code(text)
+
+    def set_current_state(self, text):
+        self.eel.set_current_state(text)
+
+    def set_bot_server(self, text):
+        self.eel.set_bot_server(text)
+
+    def set_current_key(self, text):
+        self.eel.set_current_key(text)

@@ -4,6 +4,7 @@
 trash/
 
 client/client_venv/
+client/output/
 
 bot/bot_venv/
 bot/settings.json

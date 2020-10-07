@@ -1,0 +1,81 @@
+* {
+        margin: 0;
+        padding: 0;
+        border: 0;
+        outline: 0;
+        font-size: 100%;
+        vertical-align: baseline;
+        background: transparent;
+    }
+
+html, body {
+    background: rgb(45, 49, 51);
+    font-family: sans-serif;
+    color: silver;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+}
+
+body > * {
+  flex-shrink: 0;
+}
+
+.input-container {
+    display: grid;
+    grid-template-columns: 100px 1fr;
+}
+.input-container .grid-item {
+    padding: 20px;
+    font-size: 25px;
+}
+
+.details-container {
+    display: grid;
+    grid-template-columns: 1fr;
+}
+
+.details-container div {
+    text-align: center;
+    color: rgb(152, 143, 129);
+    font-size: 20px;
+    padding-top:10px;
+}
+
+.output {
+    padding: 10px;
+    font-family: sans-serif;
+    font-size: 20px;
+    color: rgb(192, 187, 179);
+    background-color: rgba(1, 1, 1, 0.2);
+    flex-grow: 1;
+    resize: none;
+    overflow: hidden;
+}
+
+a {
+    color: #3391ff;
+}
+
+.center {
+    text-align: center;
+}
+
+*:focus {
+    outline: none;
+}
+
+input {
+    border-radius: 0px;
+    border: 0;
+    color: rgb(192, 187, 179);
+    background: rgba(0, 0, 0, 0.1);
+}
+
+.number {
+    color: rgb(192, 187, 179);
+    text-align: center;
+    border-radius: 5px;
+    font-size: 20px;
+    width: 60px;
+}

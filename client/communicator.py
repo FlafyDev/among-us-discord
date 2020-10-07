@@ -22,6 +22,11 @@ def valid_and_different_key(new_key, old_key=""):
     except:
         return False
 
+    print(new_key.secret_key, len(new_key.secret_key))
+
+    if len(new_key.secret_key) != 8:
+        return False
+
     if old_key == "":
         return True
 

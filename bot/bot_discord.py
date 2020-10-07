@@ -90,8 +90,7 @@ def run_discord(settings, embeds):
                 "list": room_list,
                 "invite": room_invite,
                 "restart": room_restart,
-                "close": room_close,
-                "debug": room_debug
+                "close": room_close
             }
             await switch.get(args[0], help_dm)(ctx)
 
@@ -156,14 +155,6 @@ def run_discord(settings, embeds):
         else:
             await ctx.send("You do not own any rooms.")
 
-    async def room_debug(ctx: commands.context.Context):
-        if ctx.author.id in rooms:
-            room_ = rooms[ctx.author.id]
-
-            await ctx.send(f"Room {room_}.")
-        else:
-            await ctx.send("You do not own any rooms.")
-
     async def create_invite(channel):
         invites = await channel.invites()
 
@@ -199,7 +190,7 @@ def run_discord(settings, embeds):
         if not check_command(message):
             return
         if message.content == client.command_prefix.strip():
-            await message.channel.send(embed=Embeds.help)
+            await help_dm(message)
         await client.process_commands(message)
 
     @loop(seconds=1)
