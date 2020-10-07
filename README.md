@@ -7,7 +7,7 @@
 **This is still in beta, so if you find any problems let me know.**  
 This bot mutes discord users according to what happens in Among Us. It gets data from the game by the packets sent to/received from the server.
 
-You can try the bot on a Discord server I created for this:  
+You can try the bot on a Discord server I created for this: https://discord.gg/Vh7VTWd  
 The prefix for commands is `!au`
 
 ## Features
