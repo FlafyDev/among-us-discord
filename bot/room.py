@@ -23,6 +23,7 @@ class Room(object):
             self.owner_name = "Player"
         self.client = client
         self.secret_key = None
+        self.secret_key_plain = None
         self.mute = 0
         self.room_code = ""
 
@@ -52,8 +53,8 @@ class Room(object):
         del rooms[self.owner.id]
 
     async def generate_secret(self):
-        self.secret_key = base64.b64encode(''.join(random.choice(string.ascii_letters)
-            for _ in range(8)).encode("utf-8")).decode("utf-8")
+        self.secret_key_plain = ''.join(random.choice(string.ascii_letters) for _ in range(8))
+        self.secret_key = base64.b64encode(self.secret_key_plain.encode("utf-8")).decode("utf-8")
 
         await self.owner.send(f"Your room's key is ```{self.generate_code_for_client()}```"
                               f"\nPut it in your client to mute automatically.\n")
@@ -70,8 +71,8 @@ class Room(object):
         print(int(time()), "-- done refresh")
 
     def generate_code_for_client(self):
-        return base64.b64encode(f"{self.settings.bot_server_url}$".encode("utf-8"))\
-            .decode("utf-8") + self.secret_key
+        return base64.b64encode(f"{self.settings.bot_server_url}${self.secret_key_plain}".encode("utf-8"))\
+            .decode("utf-8")
 
     async def set_code(self, room_code: str):
         print("Setting room code", room_code)

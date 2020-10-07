@@ -117,11 +117,11 @@ def get_communicator():
     while True:
         app_utils.output_print("Connecting to the bot's server...")
         communicator = Communicator(secret_key)
+        app_utils.set_bot_server(communicator.key.url)
         server_on, status_code = communicator.test_server()
         print("Server is working and key is valid:", server_on, status_code)
-        app_utils.set_current_key(secret_key)
-        app_utils.set_bot_server(communicator.key.url)
         if server_on:
+            app_utils.set_current_key(secret_key)
             app_utils.output_remove_lines(1)
             app_utils.output_print("Connected to the bot's server!")
             enable_sniff = True

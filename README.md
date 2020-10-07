@@ -54,7 +54,8 @@ The `settings.json` file must be in the bot's folder and follow this format:
 ```
 
 You DON'T have to build a special client to work with the bot.  
-The permissions the bot requires for Discord are: `Send Messages`, `Read Text Channels & See Voice Channels`, `Manage Channels` and `Mute Members`.
+  
+The permissions the bot requires for Discord are: `Send Messages`, `Read Text Channels & See Voice Channels`, `Manage Channels`, `Mute Members`, `Mute Members` and `Create Invite`. Or simply `permissions=20974609`.
 
 ## Credits
 Crewmate - https://github.com/MythicManiac/Crewmate
