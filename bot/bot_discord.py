@@ -96,6 +96,7 @@ def run_discord(settings, embeds):
 
     async def room_create(ctx: commands.context.Context):
         message = await ctx.send("Creating room, please wait...")
+        room_ = None
         try:
             room_ = Room(ctx.author, settings, client)
         except RoomAlreadyExistsException:
@@ -111,6 +112,16 @@ def run_discord(settings, embeds):
         except UserNotInVoiceException:
             await message.edit(
                 content=f"You must join a voice channel to start a room.")
+            return
+        except Exception as e:
+            await message.edit(
+                content=f"Something went wrong.")
+            print(e)
+            if room_ is not None:
+                try:
+                    await room_.close()
+                except:
+                    pass
             return
 
         await message.edit(content=await room_invite_text(room_))

@@ -36,9 +36,9 @@ class Room(object):
         if bot_discord.channels.room_creation_voice is not None and owner.voice.channel != bot_discord.channels.room_creation_voice:
             raise UserNotInRoomCreationVoiceException()
 
+        self.loop.run_until_complete(self.generate_secret())
         self.voice = self.loop.run_until_complete(bot_discord.channels.room_category.create_voice_channel(self.get_name(), user_limit=settings.max_users_in_room))
         self.loop.run_until_complete(self.owner.move_to(self.voice))
-        self.loop.run_until_complete(self.generate_secret())
         rooms.update({owner.id: self})
 
     async def close(self):
