@@ -13,16 +13,20 @@
                 "value": "Creates a room(voice channel) for your game."
             },
             {
-                "name": "!au room list",
-                "value": "Returns a list of all the rooms available at the moment."
+                "name": "!au room invite",
+                "value": "Returns a link for everyone to join your room. It also sends the code of the current game unless the room is locked."
             },
             {
-                "name": "!au room invite",
-                "value": "Returns a link for everyone to join your room."
+                "name": "!au room list",
+                "value": "Returns a list of all the rooms available at the moment. Same syntax as the `invite` command."
             },
             {
                 "name": "!au room restart",
                 "value": "Unmutes everyone in your room."
+            },
+            {
+                "name": "!au room lock",
+                "value": "Toggle on and off your room's lock state. When a room is locked users are unable to join and it doesn't show your room's code in the `invite` or `list` commands."
             },
             {
                 "name": "!au room close",

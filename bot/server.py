@@ -3,10 +3,10 @@ from http.server import BaseHTTPRequestHandler
 import socketserver
 from urllib.parse import urlparse, parse_qs
 from room import *
+from time import time
 import threading
 
 add_room_to_refresh = None
-add_room_to_set_code = None
 discord_loop = None
 
 class MyHandler(BaseHTTPRequestHandler):
@@ -33,6 +33,7 @@ class MyHandler(BaseHTTPRequestHandler):
                     if room_.secret_key == secret_key:
                         room_.mute = mute
                         print(int(time()), "telling the bot to mute", mute)
+                        room_.room_last_alive = time()
                         add_room_to_refresh(room_)
                         self.send_text(200)
                         return
@@ -52,6 +53,7 @@ class MyHandler(BaseHTTPRequestHandler):
                 for room_ in rooms:
                     room_ = rooms[room_]
                     if room_.secret_key == secret_key:
+                        room_.room_last_alive = time()
                         self.send_text(200)
                     else:
                         self.send_text(401)
@@ -73,8 +75,12 @@ class MyHandler(BaseHTTPRequestHandler):
                 for room_ in rooms:
                     room_ = rooms[room_]
                     if room_.secret_key == secret_key:
-                        add_room_to_set_code(room_, room_code)
-                        self.send_text(200)
+                        room_.room_last_alive = time()
+                        succ = room_.set_code(room_code)
+                        if succ:
+                            self.send_text(200)
+                        else:
+                            self.send_text(400)
                         return
 
                 self.send_text(401)
@@ -92,11 +98,10 @@ class MyHandler(BaseHTTPRequestHandler):
         else:
             self.send_text(404)
 
-def create_server(port, loop, add_room_to_refresh_func, add_room_to_set_code_func):
-    global discord_loop, add_room_to_refresh, add_room_to_set_code
+def create_server(port, loop, add_room_to_refresh_func):
+    global discord_loop, add_room_to_refresh
     discord_loop = loop
     add_room_to_refresh = add_room_to_refresh_func
-    add_room_to_set_code = add_room_to_set_code_func
     httpd = socketserver.TCPServer(("", port), MyHandler)
     print("Server is ready.")
     httpd.serve_forever()

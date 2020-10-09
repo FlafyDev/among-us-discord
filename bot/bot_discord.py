@@ -19,7 +19,6 @@ class Embeds:
 channels = Channels()
 discord_loop = None
 room_refresh_queue = queue.Queue()
-room_set_code_queue = queue.Queue()
 
 async def move_users(src: discord.VoiceChannel, dst: discord.VoiceChannel):
     # await channels.mover_channel.send(f"> move {src.position + 1} {dst.position + 1}")
@@ -29,18 +28,15 @@ async def move_users(src: discord.VoiceChannel, dst: discord.VoiceChannel):
 def add_room_to_refresh(room_: Room):
     room_refresh_queue.put(room_)
 
-def add_room_to_set_code(room_: Room, code):
-    room_set_code_queue.put((room_, code))
-
 async def mute_member(member, mute_):
-    # try:
-    if member.voice.mute != mute_:
-        print(int(time()), "- setting mute for", member.name, mute_)
-        await member.edit(mute=mute_)
+    try:
+        if member.voice.mute != mute_:
+            print(int(time()), "- setting mute for", member.name, mute_)
+            await member.edit(mute=mute_)
 
-        print(int(time()), "- set mute for", member.name, mute_)
-    # except Exception as e:
-    #     print("couldn't set \"", member.name, "\"'s server mute to ", mute_, "\n", e, sep="")
+            print(int(time()), "- set mute for", member.name, mute_)
+    except Exception as e:
+        print("couldn't set \"", member.name, "\"'s server mute to ", mute_, "\n", e, sep="")
 
 def run_discord(settings, embeds):
     global discord_loop
@@ -50,9 +46,13 @@ def run_discord(settings, embeds):
     client.remove_command('help')
 
     server_thread = threading.Thread(target=server.create_server, args=(
-        settings.bot_server_port, discord_loop, add_room_to_refresh, add_room_to_set_code))
+        settings.bot_server_port, discord_loop, add_room_to_refresh))
     server_thread.daemon = True
     server_thread.start()
+
+    room_creation_role = settings.room_creation_role
+    if room_creation_role != "":
+        room_creation_role = f" <@&{room_creation_role}>"
 
     @client.event
     async def on_voice_state_update(member, before, after):
@@ -90,6 +90,7 @@ def run_discord(settings, embeds):
                 "list": room_list,
                 "invite": room_invite,
                 "restart": room_restart,
+                "lock": room_lock_toggle,
                 "close": room_close
             }
             await switch.get(args[0], help_dm)(ctx)
@@ -124,7 +125,7 @@ def run_discord(settings, embeds):
                     pass
             return
 
-        await message.edit(content=await room_invite_text(room_))
+        await message.edit(content=(await room_invite_text(room_)) + room_creation_role)
 
     async def room_invite(ctx: commands.context.Context):
         await ctx.send(await room_invite_text(ctx.author.id))
@@ -141,14 +142,19 @@ def run_discord(settings, embeds):
             await ctx.send("You do not own any rooms.")
 
     async def room_invite_text(room_):
+        room_code_text = ""
+
         if not isinstance(room_, Room):
             if room_ in rooms:
                 room_ = rooms[room_]
             else:
                 return "You do not own any rooms."
 
+        if room_.room_code != "" and not room_.locked:
+            room_code_text = f" - {room_.room_code}"
+
         link = await create_invite(room_.voice)
-        return f"<#{room_.voice.id}> - <{link}>"
+        return f"<#{room_.voice.id}>{room_code_text} - <{link}>"
 
     async def room_list(ctx: commands.context.Context):
         content = "Available rooms:"
@@ -156,6 +162,18 @@ def run_discord(settings, embeds):
             content += f"\n{await room_invite_text(owner_id)}"
 
         await ctx.send(content)
+
+    async def room_lock_toggle(ctx: commands.context.Context):
+        if ctx.author.id in rooms:
+            room_ = rooms[ctx.author.id]
+            await room_.lock_toggle()
+
+            if room_.locked:
+                await ctx.send(f"Room locked.")
+            else:
+                await ctx.send(f"Room unlocked.")
+        else:
+            await ctx.send("You do not own any rooms.")
 
     async def room_close(ctx: commands.context.Context):
         if ctx.author.id in rooms:
@@ -213,14 +231,14 @@ def run_discord(settings, embeds):
         await room_.refresh()
         room_refresh_queue.task_done()
 
-    @loop(seconds=1)
-    async def room_set_code_from_queue():
-        try:
-            room_, code = room_set_code_queue.get(False)
-        except queue.Empty:
-            return
-        await room_.set_code(code)
-        room_set_code_queue.task_done()
+    @loop(seconds=60)
+    async def close_idle_rooms():
+        for room_ in rooms:
+            room_ = rooms[room_]
+            if room_.room_last_alive+600 < time():
+                print("Room closed for been idle for too long.", room_.owner)
+                await room_.close()
+                return
 
     @client.event
     async def on_ready():
@@ -237,5 +255,6 @@ def run_discord(settings, embeds):
         print("Bot is ready")
 
     refresh_rooms_from_queue.start()
-    room_set_code_from_queue.start()
+    close_idle_rooms.start()
+
     client.run(settings.bot_token)

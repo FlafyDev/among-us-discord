@@ -30,6 +30,7 @@ def load_json():
             self.room_category_id = int(json_data["discord"]["room_category_id"])
             self.max_users_in_room = int(json_data["discord"]["max_users_in_room"])
             self.room_prefix = json_data["discord"]["room_prefix"]
+            self.room_creation_role = json_data["discord"]["room_creation_role"]
 
             if self.general_voice_id != "":
                 self.general_voice_id = int(self.general_voice_id)

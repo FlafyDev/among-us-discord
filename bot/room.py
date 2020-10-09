@@ -26,6 +26,8 @@ class Room(object):
         self.secret_key_plain = None
         self.mute = 0
         self.room_code = ""
+        self.room_last_alive = time()
+        self.locked = False
 
         if owner.id in rooms:
             raise RoomAlreadyExistsException()
@@ -41,16 +43,32 @@ class Room(object):
         self.loop.run_until_complete(self.owner.move_to(self.voice))
         rooms.update({owner.id: self})
 
+    async def lock_toggle(self):
+        self.locked = not self.locked
+        try:
+            await self.voice.set_permissions(self.voice.guild.default_role, connect=not self.locked)
+        except Exception as e:
+            print("Bot unable to lock the room.", self.owner, "--", e)
+        pass
+
     async def close(self):
         global rooms
 
-        if bot_discord.channels.general_voice is not None:
-            await bot_discord.move_users(self.voice, bot_discord.channels.general_voice)
-            # for member in self.voice.members:
-            #     await member.move_to(bot_discord.channels.general_voice)
+        if not self.owner.id in rooms:
+            return
 
-        await self.voice.delete()
         del rooms[self.owner.id]
+
+        try:
+            if bot_discord.channels.general_voice is not None:
+                await bot_discord.move_users(self.voice, bot_discord.channels.general_voice)
+        except:
+            print("couldn't move users.")
+
+        try:
+            await self.voice.delete()
+        except:
+            print("couldn't delete voice room.")
 
     async def generate_secret(self):
         self.secret_key_plain = ''.join(random.choice(string.ascii_letters) for _ in range(8))
@@ -60,9 +78,7 @@ class Room(object):
                               f"\nPut it in your client to mute automatically.\n")
 
     def get_name(self):
-        return f"{self.settings.room_prefix}" \
-               f"{self.room_code + ('' if self.room_code == '' else '-')}" \
-               f"{self.owner.name}"
+        return f"{self.settings.room_prefix}{self.owner.name}"
 
     async def refresh(self):
         print(int(time()), "-- in refresh")
@@ -74,15 +90,16 @@ class Room(object):
         return base64.b64encode(f"{self.settings.bot_server_url}${self.secret_key_plain}".encode("utf-8"))\
             .decode("utf-8")
 
-    async def set_code(self, room_code: str):
+    def set_code(self, room_code: str):
         print("Setting room code", room_code)
         if len(room_code) == 6:
             for letter in room_code:
                 if letter not in string.ascii_letters:
                     return
-
             self.room_code = room_code
-            await self.voice.edit(name=self.get_name())
+            return True
+
+
 
 class RoomAlreadyExistsException(Exception):
     pass
