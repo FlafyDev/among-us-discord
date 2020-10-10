@@ -32,14 +32,14 @@ Download link in [releases](https://github.com/FlafyDev/among-us-discord/release
 ![example image of the client](client_example.png)
 
 ## Setup the bot - Medium difficulty
-This bot runs a web server to communicate with the user.
+This bot was made in Python 3.9.0 and it runs a web server to communicate with the user.
 
 The `settings.json` file must be in the bot's folder and follow this format: 
 ```
 {
   "settings": {
-    "bot_server_port": "", // Set a port to run the web server on. (blank for os.environ['PORT'])
-    "bot_server_url": "https://example.com/" // Url of the bot's web server to communicate with the user.
+    "bot_server_port": "8080", // Set a port to run the web server on. (blank for os.environ['PORT'])
+    "bot_server_url": "http://localhost:8080/" // Url of the bot's web server to communicate with the user.
   },
 
   "discord": {

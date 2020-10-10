@@ -22,6 +22,8 @@ local_ip = get_local_ip()
 eel.init("web")
 app_utils = AppUtils(eel)
 
+debug = False
+
 def change_state(state_: States):
     global state
     if state != state_:
@@ -31,10 +33,11 @@ def change_state(state_: States):
 
 def dissector(packet):
     global game_players_data, record_data, state, communicator, enable_sniff, current_room_code, among_us_port, meeting_end_mute_delay
-    # print(bytes(packet).hex())
 
-    if not enable_sniff:
+    if not (debug or enable_sniff):
         return
+
+    # print(bytes(packet).hex())
 
     if packet.haslayer(UDP) and packet.haslayer(IP):
         udp_layer = packet.getlayer(UDP)
@@ -107,7 +110,7 @@ def dissector(packet):
 #     print(packet.getlayer(UDP).sport, '-->', packet.getlayer(UDP).dport)
 
 def get_communicator():
-    global communicator, enable_sniff, comm_thread, secret_key
+    global communicator, enable_sniff, comm_thread, secret_key, current_room_code
 
     def check_abort():
         return comm_thread is not None and comm_thread != initial_comm_thread
@@ -121,6 +124,9 @@ def get_communicator():
         server_on, status_code = communicator.test_server()
         print("Server is working and key is valid:", server_on, status_code)
         if server_on:
+            current_room_code = None
+            app_utils.set_room_code("----")
+
             app_utils.set_current_key(secret_key)
             app_utils.output_remove_lines(1)
             app_utils.output_print("Connected to the bot's server!")
