@@ -24,6 +24,9 @@ app_utils = AppUtils(eel)
 
 debug = False
 
+if debug:
+    communicator = Communicator("YSRh")
+
 def change_state(state_: States):
     global state
     if state != state_:
@@ -172,7 +175,7 @@ def open_repo():
 
 def main():
     sniffing_thread = threading.Thread(target=lambda:
-    sniff(prn=dissector, filter=f"udp", store=False,
+    sniff(prn=dissector, filter="udp", store=False,
           started_callback=lambda: app_utils.output_print(f"listening to packets.")))
     sniffing_thread.daemon = True
     sniffing_thread.start()

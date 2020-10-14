@@ -31,7 +31,7 @@ Download link in [releases](https://github.com/FlafyDev/among-us-discord/release
 
 ![example image of the client](client_example.png)
 
-## Setup the bot - Medium difficulty
+## Setup the bot
 This bot was made in Python 3.9.0 and it runs a web server to communicate with the user.
 
 The `settings.json` file must be in the bot's folder and follow this format: 
