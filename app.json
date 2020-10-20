@@ -14,11 +14,13 @@
 		},
 		"ROOM_CREATION_VOICE_ID": {
 			"description": "Users must be connected to this voice channel to create a room (blank for any voice)",
-			"value": ""
+			"value": "",
+			"required": false
 		},
 		"GENERAL_VOICE_ID": {
 			"description": "Will move the users to here before closing the room (blank for don't move)",
-			"value": ""
+			"value": "",
+			"required": false
 		},
 		"ROOM_CATEGORY_ID": {
 			"description": "Where voice channels for rooms will be created",
@@ -26,7 +28,8 @@
 		},
 		"ROOM_CREATION_ROLE": {
 			"description": "The role to tag when a room is created (Takes a role id, blank for don't tag)",
-			"value": ""
+			"value": "",
+			"required": false
 		},
 		"BOT_SERVER_PORT": {
 			"description": "The port the web server will use. Leave this blank",

@@ -11,3 +11,4 @@ bot/upload.bat
 bot/.git/
 bot/.gitignore
 bot/.env
+bot
