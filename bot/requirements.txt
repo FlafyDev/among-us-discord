@@ -9,4 +9,5 @@ idna==2.10
 lark-parser==0.7.8
 multidict==4.7.6
 nest-asyncio==1.4.1
+python-dotenv==0.14.0
 yarl==1.6.0
