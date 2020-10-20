@@ -9,8 +9,8 @@
 			"value": "https://app-name.herokuapp.com/"
 		},
 		"BOT_TOKEN": {
-			"description": "",
-			"value": "The Discord bot's token"
+			"description": "The Discord bot's token",
+			"value": ""
 		},
 		"ROOM_CREATION_VOICE_ID": {
 			"description": "Users must be connected to this voice channel to create a room (blank for any voice)",
