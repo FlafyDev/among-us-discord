@@ -1,0 +1,13 @@
+**/.idea/
+**/__pycache__/
+
+trash/
+
+client/client_venv/
+client/output/
+
+bot/bot_venv/
+bot/upload.bat
+bot/.git/
+bot/.gitignore
+bot/.env

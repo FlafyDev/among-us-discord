@@ -1,0 +1,6 @@
+{
+  "name": "Among Us Discord Bot",
+  "description": "This bot mutes discord users according to what happens in Among Us. It gets data from the game by the packets sent to/received from the server.",
+  "repository": "https://github.com/FlafyDev/among-us-discord/tree/version-2/bot",
+  "logo": "https://github.com/FlafyDev/among-us-discord/raw/version-2/icon-files/bot_icon_256.png"
+}

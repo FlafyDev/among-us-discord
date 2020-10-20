@@ -1,0 +1,13 @@
+aiohttp==3.6.2
+async-timeout==3.0.1
+attrs==20.2.0
+chardet==3.0.4
+commentjson==0.9.0
+discord.py==1.5.0
+gunicorn==20.0.4
+idna==2.10
+lark-parser==0.7.8
+multidict==4.7.6
+nest-asyncio==1.4.1
+python-dotenv==0.14.0
+yarl==1.6.0
