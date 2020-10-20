@@ -30,7 +30,8 @@
 		},
 		"BOT_SERVER_PORT": {
 			"description": "The port the web server will use. Leave this blank",
-			"value": ""
+			"value": "",
+			"required": false 
 		}
 	}
 }
