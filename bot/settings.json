@@ -1,0 +1,4 @@
+{
+  "max_users_in_room": 10, // 0 for unlimited users
+  "room_prefix": "『\uD83D\uDD79』" // Voice channels' names will follow this format: f"{room_prefix}{room_owner}"
+}

@@ -7,9 +7,7 @@ client/client_venv/
 client/output/
 
 bot/bot_venv/
-bot/settings.json
 bot/upload.bat
-bot/Procfile
 bot/.git/
 bot/.gitignore
-bot/runtime.txt
+bot/.env

@@ -34,28 +34,28 @@ Download link in [releases](https://github.com/FlafyDev/among-us-discord/release
 ## Setup the bot
 This bot was made in Python 3.9.0 and it runs a web server to communicate with the user.
 
-The `settings.json` file must be in the bot's folder and follow this format: 
+The `.env` file must be in the bot's folder and follow this format(without the commented lines). You will need to fill it correctly:
+```
+BOT_SERVER_PORT=8080                        # Set a port to run the web server on. (blank for os.environ['PORT'])
+BOT_SERVER_URL=http://localhost:8080/       # Url of the bot's web server to communicate with the user.
+BOT_TOKEN=                                  # The Discord bot's token
+ROOM_CREATION_VOICE_ID=voice_channel_id     # Users must be connected to this voice channel to create a room (blank for any voice)
+GENERAL_VOICE_ID=voice_channel_id           # Will move the users to here before closing the room (blank for don't move)
+ROOM_CATEGORY_ID=category_id                # Where voice channels for rooms will be created
+ROOM_CREATION_ROLE=role_id                  # The role to tag when a room is created (Takes a role id, blank for don't tag)
+```
+
+
+The `settings.json` file must be in the bot's folder and should look like that:
 ```
 {
-  "settings": {
-    "bot_server_port": "8080", // Set a port to run the web server on. (blank for os.environ['PORT'])
-    "bot_server_url": "http://localhost:8080/" // Url of the bot's web server to communicate with the user.
-  },
-
-  "discord": {
-    "token": "", // The Discord bot's token
-    "room_creation_voice_id": "voice_channel_id", // Users must be connected to this voice channel to create a room (blank for any voice)
-    "general_voice_id": "voice_channel_id", // Will move the users to here before closing the room (blank for don't move)
-    "room_category_id": "category_id", // Where voice channels for rooms will be created
-    "max_users_in_room": 10, // 0 for unlimited users
-    "room_prefix": "『\uD83D\uDD79』", // Voice channel's names will follow this format: f"{room_prefix}{game_code}-{room_owner}"
-    "room_creation_role": "" // The role to tag when a room is created (Takes a role id, blank for don't tag)
-  }
+  "max_users_in_room": 10, // 0 for unlimited users
+  "room_prefix": "『\uD83D\uDD79』" // Voice channels' names will follow this format: f"{room_prefix}{room_owner}"
 }
 ```
 
 You DON'T have to build a special client to work with the bot.  
-  
+
 #### - Permissions
 The permissions the bot requires for Discord are: `Send Messages`, `Read Text Channels & See Voice Channels`,
 `Manage Channels`, `Mute Members`, `Move Members`, `Create Invite` and `Manage Roles`. Or simply `permissions=289410065`.

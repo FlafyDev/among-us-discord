@@ -3,6 +3,8 @@ nest_asyncio.apply()
 import commentjson
 import bot_discord
 import os
+import dotenv
+dotenv.load_dotenv()
 
 def load_json():
     global settings
@@ -13,30 +15,30 @@ def load_json():
 
     settings_data = commentjson.load(json_file)
     json_file.close()
-    print("Settings from file:", settings_data)
+    print("settings.json:", settings_data)
 
     class Settings:
         def __init__(self, json_data):
-            self.bot_server_port = json_data["settings"]["bot_server_port"]
+            self.bot_server_port = os.environ.get("BOT_SERVER_PORT")
             if self.bot_server_port == "":
                 self.bot_server_port = int(os.environ['PORT'])
             else:
                 self.bot_server_port = int(self.bot_server_port)
-            self.bot_server_url = json_data["settings"]["bot_server_url"]
+            self.bot_server_url = os.environ.get("BOT_SERVER_URL")
 
-            self.bot_token = json_data["discord"]["token"]
-            self.room_creation_voice_id = json_data["discord"]["room_creation_voice_id"]
-            self.general_voice_id = json_data["discord"]["general_voice_id"]
-            self.room_category_id = int(json_data["discord"]["room_category_id"])
-            self.max_users_in_room = int(json_data["discord"]["max_users_in_room"])
-            self.room_prefix = json_data["discord"]["room_prefix"]
-            self.room_creation_role = json_data["discord"]["room_creation_role"]
+            self.bot_token = os.environ.get("BOT_TOKEN")
+            self.room_creation_voice_id = os.environ.get("ROOM_CREATION_VOICE_ID")
+            self.general_voice_id = os.environ.get("GENERAL_VOICE_ID")
+            self.room_category_id = int(os.environ.get("ROOM_CATEGORY_ID"))
+            self.room_creation_role = os.environ.get("ROOM_CREATION_ROLE")
 
-            if self.general_voice_id != "":
+            self.max_users_in_room = int(json_data["max_users_in_room"])
+            self.room_prefix = json_data["room_prefix"]
+
+            if self.general_voice_id.strip() != "":
                 self.general_voice_id = int(self.general_voice_id)
-            if self.room_creation_voice_id != "":
+            if self.room_creation_voice_id.strip() != "":
                 self.room_creation_voice_id = int(self.room_creation_voice_id)
-
 
     settings = Settings(settings_data)
 
