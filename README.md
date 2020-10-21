@@ -32,21 +32,21 @@ Download link in [releases](https://github.com/FlafyDev/among-us-discord/release
 ![example image of the client](client_example.png)
 
 ## Hosting the bot - A Simple Step by Step Guide
-#### 1. Create the bot
+### 1. Create the bot
 1.1. Go to [https://discord.com/developers/applications](https://discord.com/developers/applications) and create a new application.  
-1.2. Go to the "Bot" setting on the left side add a bot.  
+1.2. Go to the "Bot" setting on the left side and add a bot.  
 1.3. Now Go back to the first setting("General Information"), copy the "CLIENT ID" and paste it instead of the "CLIENTID" in the following URL `https://discord.com/api/oauth2/authorize?permissions=289410065&scope=bot&client_id=CLIENTID`  
 1.4. Open the URL and add the bot to your server.
-#### 2. Hosting it on Heroku
+### 2. Hosting it on Heroku
 2.1. Now the only thing left to do is to host it.  
 Deploy the bot to Heroku with the button below.  
 <a href="https://www.heroku.com/deploy/?template=https://github.com/FlafyDev/among-us-discord/tree/bot-only">
   <img src="https://www.herokucdn.com/deploy/button.svg" alt="Deploy">
 </a>  
-Fill in all the information required.  
-2.2. After the bot is in your server, right-click the category you've specified as your "Room Category" and press on Edit Category, in the Permissions tab add the role the bot uses and enable it the Connect permission.
+Fill in all the information.  
+2.2. After the bot is in your server, right-click the category you've specified as your "Room Category" and press on Edit Category, in the Permissions tab add the role the bot uses and enable the Connect permission.  
 2.3. Done!
-##### Notes:  
+#### Notes:  
 1. The bot's token can be obtained in the bot's application "Bot" setting(Like in step 1.2) 
 2. To get IDs of categories, channels, and roles you need to go to your Discord's App Settings -> Appearance -> enable Developer Mode.
 Now you'll be able to right-click on any of the three and select "Copy ID"
