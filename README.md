@@ -1,3 +1,7 @@
+# DEPRECATED 
+
+---
+
 # Flafy's Among Us Bot - BETA
 
 <p align="center">
